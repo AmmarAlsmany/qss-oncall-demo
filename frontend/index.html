@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QSS — OnCall Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:        #05080f;
+    --surface:   #0c1120;
+    --card:      #111827;
+    --border:    #1e2d45;
+    --accent:    #0ea5e9;
+    --accent2:   #38bdf8;
+    --gold:      #f59e0b;
+    --green:     #22c55e;
+    --red:       #ef4444;
+    --orange:    #f97316;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --font:      'Sora', sans-serif;
+    --mono:      'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(14,165,233,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(14,165,233,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow blob */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(14,165,233,.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    height: 48px;
+    width: auto;
+    flex-shrink: 0;
+    object-fit: contain;
+    filter: drop-shadow(0 0 16px rgba(14,165,233,.35));
+  }
+
+  .header-text h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+
+  .header-text p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .badge {
+    margin-left: auto;
+    background: rgba(14,165,233,.1);
+    border: 1px solid rgba(14,165,233,.3);
+    color: var(--accent2);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  /* ── Inputs ── */
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) { .input-row { grid-template-columns: 1fr; } }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(14,165,233,.1);
+  }
+
+  /* ── Drop Zone ── */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .25s;
+    background: var(--surface);
+    position: relative;
+  }
+
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: rgba(14,165,233,.04);
+  }
+
+  .dropzone input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .dropzone-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .dropzone h3 {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+
+  .dropzone p {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .file-selected {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    background: rgba(14,165,233,.08);
+    border: 1px solid rgba(14,165,233,.25);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-top: 16px;
+    font-size: 13px;
+  }
+
+  .file-selected.visible { display: flex; }
+
+  .file-icon {
+    font-size: 22px;
+  }
+
+  .file-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent2);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .file-size { color: var(--muted); font-size: 12px; }
+
+  .remove-file {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 4px;
+    transition: color .15s;
+  }
+
+  .remove-file:hover { color: var(--red); }
+
+  /* ── Sample picker ── */
+  .samples-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .samples-divider {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    text-align: center;
+  }
+
+  .lang-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 16px 0 8px;
+  }
+
+  /* Tabs */
+  .lang-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 16px;
+  }
+
+  .lang-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 7px;
+    transition: all .2s;
+  }
+
+  .lang-tab:hover {
+    color: var(--text);
+  }
+
+  .lang-tab.active {
+    background: rgba(14,165,233,.15);
+    color: var(--accent2);
+  }
+
+  .lang-pane {
+    display: none;
+  }
+
+  .lang-pane.active {
+    display: block;
+  }
+
+  .lang-pane[data-lang="arabic"] {
+    direction: rtl;
+  }
+
+  .lang-pane[data-lang="arabic"] .sample-card {
+    text-align: right;
+  }
+
+  .sample-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+
+  .sample-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sample-card:hover {
+    border-color: var(--accent);
+    background: rgba(14,165,233,.05);
+    transform: translateY(-1px);
+  }
+
+  .sample-card.selected {
+    border-color: var(--accent);
+    background: rgba(14,165,233,.1);
+    box-shadow: 0 0 0 2px rgba(14,165,233,.25);
+  }
+
+  .sample-card .sample-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .sample-card .sample-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .verdict-pill {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 8px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .verdict-pill.Excellent           { background: rgba(34,197,94,.15);  color: #22c55e; }
+  .verdict-pill.Good                { background: rgba(14,165,233,.15); color: var(--accent2); }
+  .verdict-pill[class*="Needs"]     { background: rgba(249,115,22,.15); color: var(--orange); }
+  .verdict-pill.Poor                { background: rgba(239,68,68,.15);  color: var(--red); }
+
+  /* ── Analyze Button ── */
+  .btn-analyze {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent), #0369a1);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s, transform .15s, box-shadow .2s;
+    box-shadow: 0 4px 24px rgba(14,165,233,.25);
+    letter-spacing: .3px;
+    margin-top: 20px;
+  }
+
+  .btn-analyze:hover:not(:disabled) {
+    opacity: .92;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(14,165,233,.35);
+  }
+
+  .btn-analyze:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* ── Progress ── */
+  #progress-section {
+    display: none;
+  }
+
+  .progress-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: all .3s;
+    opacity: .4;
+  }
+
+  .step.active {
+    opacity: 1;
+    border-color: var(--accent);
+    background: rgba(14,165,233,.06);
+  }
+
+  .step.done {
+    opacity: 1;
+    border-color: rgba(34,197,94,.3);
+    background: rgba(34,197,94,.05);
+  }
+
+  .step-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    background: var(--border);
+  }
+
+  .step.active .step-icon {
+    background: rgba(14,165,233,.2);
+    animation: pulse 1.5s infinite;
+  }
+
+  .step.done .step-icon {
+    background: rgba(34,197,94,.2);
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,.4); }
+    50%       { box-shadow: 0 0 0 8px rgba(14,165,233,0); }
+  }
+
+  .step-label {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .step-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ── Results ── */
+  #results-section {
+    display: none;
+    animation: fadeUp .5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Score Hero */
+  .score-hero {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 32px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .score-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(14,165,233,.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .score-ring {
+    flex-shrink: 0;
+    width: 100px;
+    height: 100px;
+    position: relative;
+  }
+
+  .score-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .score-ring circle {
+    fill: none;
+    stroke-width: 6;
+    stroke-linecap: round;
+  }
+
+  .score-ring .track { stroke: var(--border); }
+  .score-ring .fill  {
+    stroke: var(--accent);
+    stroke-dasharray: 283;
+    stroke-dashoffset: 283;
+    transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1) .3s;
+  }
+
+  .score-number {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+
+  .score-info h2 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .score-info p {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 6px;
+    line-height: 1.6;
+    max-width: 500px;
+  }
+
+  .verdict-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 12px;
+  }
+
+  .verdict-Excellent     { background: rgba(34,197,94,.15);  color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
+  .verdict-Good          { background: rgba(14,165,233,.15); color: var(--accent2); border: 1px solid rgba(14,165,233,.3); }
+  .verdict-Needs-Improvement { background: rgba(249,115,22,.15); color: var(--orange); border: 1px solid rgba(249,115,22,.3); }
+  .verdict-Poor          { background: rgba(239,68,68,.15);  color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+
+  /* Speakers row */
+  .speakers-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 600px) { .speakers-row { grid-template-columns: 1fr; } }
+
+  .speaker-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+  }
+
+  .speaker-role {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .speaker-id {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--accent2);
+    margin-bottom: 10px;
+  }
+
+  .tone-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(14,165,233,.1);
+    border: 1px solid rgba(14,165,233,.2);
+    color: var(--accent2);
+  }
+
+  /* Strengths / Improvements */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+
+  .list-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+  }
+
+  .list-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .list-title.green { color: var(--green); }
+  .list-title.orange { color: var(--orange); }
+
+  .list-card ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .list-card li {
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #cbd5e1;
+  }
+
+  .list-card li::before {
+    content: attr(data-icon);
+    flex-shrink: 0;
+    font-size: 14px;
+    margin-top: 1px;
+  }
+
+  /* Key moments */
+  .moments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .moment-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    border: 1px solid transparent;
+  }
+
+  .moment-item.positive  { background: rgba(34,197,94,.06);  border-color: rgba(34,197,94,.15);  }
+  .moment-item.negative  { background: rgba(239,68,68,.06);  border-color: rgba(239,68,68,.15);  }
+  .moment-item.neutral   { background: rgba(100,116,139,.06); border-color: rgba(100,116,139,.15); }
+
+  .moment-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+
+  .positive .moment-dot  { background: var(--green); }
+  .negative .moment-dot  { background: var(--red);   }
+  .neutral  .moment-dot  { background: var(--muted); }
+
+  /* Transcript */
+  .transcript-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.8;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    color: #94a3b8;
+  }
+
+  .transcript-box::-webkit-scrollbar { width: 6px; }
+  .transcript-box::-webkit-scrollbar-track { background: transparent; }
+  .transcript-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .speaker-highlight-0 { color: var(--accent2); }
+  .speaker-highlight-1 { color: #a78bfa; }
+  .speaker-highlight-2 { color: #34d399; }
+
+  /* Error */
+  .error-box {
+    display: none;
+    background: rgba(239,68,68,.08);
+    border: 1px solid rgba(239,68,68,.25);
+    border-radius: 12px;
+    padding: 16px 20px;
+    color: #fca5a5;
+    font-size: 13px;
+    margin-top: 16px;
+    line-height: 1.6;
+  }
+
+  .error-box.visible { display: block; }
+
+  /* New analysis button */
+  .btn-reset {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all .2s;
+    margin-top: 24px;
+  }
+
+  .btn-reset:hover {
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <header>
+    <img class="logo" src="https://qltyss.com/wp-content/uploads/2024/10/Asset-1qsslogo.png" alt="QSS" />
+    <div class="header-text">
+      <h1>OnCall Analyzer</h1>
+      <p>Airline Customer Service Quality Assurance</p>
+    </div>
+    <span class="badge">AI Powered</span>
+  </header>
+
+  <!-- Upload Card -->
+  <div class="card" id="upload-card">
+    <div class="card-title">Audio File</div>
+
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="file-input" accept=".mp3,.wav,.m4a,.ogg,.flac,.mp4" />
+      <span class="dropzone-icon">🎙️</span>
+      <h3>Drop audio file here</h3>
+      <p>or click to browse &nbsp;·&nbsp; MP3, WAV, M4A, OGG, FLAC</p>
+    </div>
+
+    <div class="file-selected" id="file-info">
+      <span class="file-icon">🎵</span>
+      <span class="file-name" id="file-name-label">—</span>
+      <span class="file-size" id="file-size-label"></span>
+      <button class="remove-file" id="remove-file">✕</button>
+    </div>
+
+    <div class="error-box" id="error-box"></div>
+
+    <button class="btn-analyze" id="analyze-btn" disabled>
+      Analyze Conversation
+    </button>
+
+    <div class="samples-section" id="samples-section" style="display:none">
+      <div class="samples-divider">— Or try a sample call —</div>
+      <div id="samples-container"></div>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div id="progress-section">
+    <div class="card">
+      <div class="card-title">Processing</div>
+      <div class="progress-steps">
+        <div class="step" id="step-diarize">
+          <div class="step-icon">🔊</div>
+          <div>
+            <div class="step-label">Speaker Diarization</div>
+            <div class="step-sub">Identifying speakers in audio</div>
+          </div>
+        </div>
+        <div class="step" id="step-transcribe">
+          <div class="step-icon">📝</div>
+          <div>
+            <div class="step-label">Transcription</div>
+            <div class="step-sub">Converting speech to text</div>
+          </div>
+        </div>
+        <div class="step" id="step-emotion">
+          <div class="step-icon">🎭</div>
+          <div>
+            <div class="step-label">Tone Analysis</div>
+            <div class="step-sub">Detecting emotion per speaker</div>
+          </div>
+        </div>
+        <div class="step" id="step-gpt">
+          <div class="step-icon">🤖</div>
+          <div>
+            <div class="step-label">Service Evaluation</div>
+            <div class="step-sub">Assessing employee performance</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results-section">
+
+    <!-- Score Hero -->
+    <div class="score-hero" id="score-hero">
+      <div class="score-ring">
+        <svg viewBox="0 0 100 100">
+          <circle class="track" cx="50" cy="50" r="45" />
+          <circle class="fill" id="score-arc" cx="50" cy="50" r="45" />
+        </svg>
+        <div class="score-number" id="score-number">—</div>
+      </div>
+      <div class="score-info">
+        <h2 id="score-title">Service Analysis</h2>
+        <div id="verdict-badge-wrap"></div>
+        <p id="score-summary"></p>
+      </div>
+    </div>
+
+    <!-- Speakers -->
+    <div class="speakers-row">
+      <div class="speaker-card">
+        <div class="speaker-role">Employee</div>
+        <div class="speaker-id" id="employee-id">—</div>
+        <div class="tone-pill" id="employee-tone">—</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5" id="employee-reason"></div>
+      </div>
+      <div class="speaker-card">
+        <div class="speaker-role">Customer</div>
+        <div class="speaker-id" id="customer-id">—</div>
+        <div class="tone-pill" id="customer-tone">—</div>
+      </div>
+    </div>
+
+    <!-- Strengths & Improvements -->
+    <div class="two-col">
+      <div class="list-card">
+        <div class="list-title green">✦ Strengths</div>
+        <ul id="strengths-list"></ul>
+      </div>
+      <div class="list-card">
+        <div class="list-title orange">⚠ Areas to Improve</div>
+        <ul id="improvements-list"></ul>
+      </div>
+    </div>
+
+    <!-- Key Moments -->
+    <div class="card">
+      <div class="card-title">Key Moments</div>
+      <div class="moments-list" id="moments-list"></div>
+    </div>
+
+    <!-- Transcript -->
+    <div class="card">
+      <div class="card-title">Full Transcript</div>
+      <div class="transcript-box" id="transcript-box"></div>
+    </div>
+
+    <button class="btn-reset" id="reset-btn">← Analyze Another Call</button>
+  </div>
+
+</div>
+
+<script>
+  const API_BASE = 'http://localhost:8000';
+
+  // ── File handling ──
+  let selectedFile = null;
+
+  const dropzone     = document.getElementById('dropzone');
+  const fileInput    = document.getElementById('file-input');
+  const fileInfo     = document.getElementById('file-info');
+  const fileNameLbl  = document.getElementById('file-name-label');
+  const fileSizeLbl  = document.getElementById('file-size-label');
+  const removeBtn    = document.getElementById('remove-file');
+  const analyzeBtn   = document.getElementById('analyze-btn');
+
+  function formatBytes(b) {
+    if (b < 1024)       return b + ' B';
+    if (b < 1048576)    return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(1) + ' MB';
+  }
+
+  function setFile(file) {
+    selectedFile = file;
+    fileNameLbl.textContent = file.name;
+    fileSizeLbl.textContent = formatBytes(file.size);
+    fileInfo.classList.add('visible');
+    checkReady();
+  }
+
+  function clearFile() {
+    selectedFile = null;
+    fileInput.value = '';
+    fileInfo.classList.remove('visible');
+    checkReady();
+  }
+
+  function checkReady() {
+    analyzeBtn.disabled = !selectedFile;
+  }
+
+  fileInput.addEventListener('change', e => {
+    if (e.target.files[0]) setFile(e.target.files[0]);
+  });
+
+  removeBtn.addEventListener('click', clearFile);
+
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    const f = e.dataTransfer.files[0];
+    if (f) setFile(f);
+  });
+
+  // ── Progress helpers ──
+  const steps = ['diarize','transcribe','emotion','gpt'];
+
+  function setStep(name) {
+    steps.forEach(s => {
+      const el = document.getElementById(`step-${s}`);
+      el.classList.remove('active','done');
+      const idx = steps.indexOf(s);
+      const cur = steps.indexOf(name);
+      if (idx < cur)  el.classList.add('done'),   (el.querySelector('.step-icon').textContent = '✓');
+      if (idx === cur) el.classList.add('active');
+    });
+  }
+
+  function allDone() {
+    steps.forEach(s => {
+      const el = document.getElementById(`step-${s}`);
+      el.classList.remove('active');
+      el.classList.add('done');
+      el.querySelector('.step-icon').textContent = '✓';
+    });
+  }
+
+  // ── Analyze ──
+  analyzeBtn.addEventListener('click', async () => {
+    clearError();
+    showSection('progress');
+
+    const form = new FormData();
+    form.append('audio', selectedFile);
+
+    // Simulate step progression while waiting (real steps happen server-side)
+    setStep('diarize');
+    const stepTimers = [
+      setTimeout(() => setStep('transcribe'), 8000),
+      setTimeout(() => setStep('emotion'),    20000),
+      setTimeout(() => setStep('gpt'),        35000),
+    ];
+
+    try {
+      const res = await fetch(`${API_BASE}/analyze`, { method: 'POST', body: form });
+      stepTimers.forEach(clearTimeout);
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
+        throw new Error(err.detail || 'Request failed');
+      }
+
+      const data = await res.json();
+      allDone();
+      setTimeout(() => renderResults(data), 600);
+
+    } catch (err) {
+      stepTimers.forEach(clearTimeout);
+      showSection('upload');
+      showError(err.message);
+    }
+  });
+
+  // ── Render results ──
+  function renderResults(data) {
+    const employee = data.employee || {};
+    const customer = data.customer || {};
+
+    // Score ring
+    const score = data.score || 0;
+    const circumference = 2 * Math.PI * 45; // ~283
+    const offset = circumference - (score / 10) * circumference;
+    const arc = document.getElementById('score-arc');
+    arc.style.strokeDashoffset = circumference; // reset
+    setTimeout(() => { arc.style.strokeDashoffset = offset; }, 50);
+
+    // Color arc by score
+    if (score >= 9)      arc.style.stroke = '#22c55e';
+    else if (score >= 7) arc.style.stroke = '#0ea5e9';
+    else if (score >= 5) arc.style.stroke = '#f97316';
+    else                 arc.style.stroke = '#ef4444';
+
+    document.getElementById('score-number').textContent = score + '/10';
+    document.getElementById('score-title').textContent  = 'Overall Score: ' + score + ' / 10';
+    document.getElementById('score-summary').textContent = data.summary || '';
+
+    // Verdict badge
+    const verdictKey = (data.verdict || 'Good').replace(/\s+/g,'-');
+    const verdictIcons = { Excellent:'🏆', Good:'✓', 'Needs-Improvement':'⚠', Poor:'✕' };
+    document.getElementById('verdict-badge-wrap').innerHTML =
+      `<span class="verdict-badge verdict-${verdictKey}">${verdictIcons[verdictKey]||''} ${data.verdict || ''}</span>`;
+
+    // Speakers
+    document.getElementById('employee-id').textContent = employee.speaker_id || '—';
+    document.getElementById('customer-id').textContent = customer.speaker_id || '—';
+    document.getElementById('employee-reason').textContent = employee.identification_reason || '';
+
+    document.getElementById('employee-tone').textContent = '🎭 ' + (employee.tone || '—');
+    document.getElementById('customer-tone').textContent = '🎭 ' + (customer.tone || '—');
+
+    // Strengths
+    const sl = document.getElementById('strengths-list');
+    sl.innerHTML = (data.strengths || []).map(s =>
+      `<li data-icon="✦">${s}</li>`).join('');
+
+    // Improvements
+    const il = document.getElementById('improvements-list');
+    il.innerHTML = (data.improvements || []).map(s =>
+      `<li data-icon="→">${s}</li>`).join('');
+
+    // Key moments
+    const ml = document.getElementById('moments-list');
+    ml.innerHTML = (data.key_moments || []).map(m => `
+      <div class="moment-item ${m.assessment}">
+        <div class="moment-dot"></div>
+        <div>${m.moment}</div>
+      </div>`).join('');
+
+    // Transcript with speaker color-coding
+    const speakerColors = {};
+    let colorIdx = 0;
+    const lines = (data.transcript || '').split('\n').map(line => {
+      const match = line.match(/^(SPEAKER_\d+)/);
+      if (match) {
+        const sp = match[1];
+        if (!(sp in speakerColors)) speakerColors[sp] = colorIdx++;
+        const cls = `speaker-highlight-${speakerColors[sp]}`;
+        return line.replace(sp, `<span class="${cls}">${sp}</span>`);
+      }
+      return line;
+    });
+    document.getElementById('transcript-box').innerHTML = lines.join('\n');
+
+    showSection('results');
+  }
+
+  // ── UI helpers ──
+  function showSection(name) {
+    document.getElementById('upload-card').style.display      = name === 'upload'   ? 'block' : 'none';
+    document.getElementById('progress-section').style.display = name === 'progress' ? 'block' : 'none';
+    document.getElementById('results-section').style.display  = name === 'results'  ? 'block' : 'none';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-box');
+    el.textContent = '⚠ ' + msg;
+    el.classList.add('visible');
+  }
+
+  function clearError() {
+    document.getElementById('error-box').classList.remove('visible');
+  }
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    clearFile();
+    document.querySelectorAll('.sample-card').forEach(c => c.classList.remove('selected'));
+    showSection('upload');
+    // Reset steps
+    steps.forEach(s => {
+      const el = document.getElementById(`step-${s}`);
+      el.classList.remove('active','done');
+      const icons = {diarize:'🔊', transcribe:'📝', emotion:'🎭', gpt:'🤖'};
+      el.querySelector('.step-icon').textContent = icons[s];
+    });
+  });
+
+  // ── Sample picker ──
+  const LANG_LABELS = { english: 'English', arabic: 'العربية' };
+
+  async function loadSamples() {
+    try {
+      const res = await fetch(`${API_BASE}/samples-index`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const langs = data.languages || {};
+      const langKeys = Object.keys(langs);
+      if (langKeys.length === 0) return;
+
+      const container = document.getElementById('samples-container');
+      container.innerHTML = '';
+
+      // Tab bar
+      const tabBar = document.createElement('div');
+      tabBar.className = 'lang-tabs';
+      container.appendChild(tabBar);
+
+      langKeys.forEach((lang, i) => {
+        const tab = document.createElement('button');
+        tab.type = 'button';
+        tab.className = 'lang-tab' + (i === 0 ? ' active' : '');
+        tab.dataset.lang = lang;
+        tab.textContent = LANG_LABELS[lang] || lang;
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.lang-tab').forEach(t => t.classList.toggle('active', t === tab));
+          document.querySelectorAll('.lang-pane').forEach(p => p.classList.toggle('active', p.dataset.lang === lang));
+        });
+        tabBar.appendChild(tab);
+      });
+
+      // Panes — one grid per language
+      langKeys.forEach((lang, i) => {
+        const pane = document.createElement('div');
+        pane.className = 'lang-pane' + (i === 0 ? ' active' : '');
+        pane.dataset.lang = lang;
+
+        const grid = document.createElement('div');
+        grid.className = 'sample-grid';
+
+        for (const f of langs[lang]) {
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.className = 'sample-card';
+          card.dataset.url = f.url;
+          card.dataset.filename = f.filename;
+          card.innerHTML = `
+            <div class="sample-label">
+              <span>${f.label}</span>
+              ${f.expected_verdict ? `<span class="verdict-pill ${f.expected_verdict.replace(/\s+/g,'-')}">${f.expected_verdict}</span>` : ''}
+            </div>
+            ${f.description ? `<div class="sample-desc">${f.description}</div>` : ''}
+          `;
+          card.addEventListener('click', () => selectSample(card));
+          grid.appendChild(card);
+        }
+        pane.appendChild(grid);
+        container.appendChild(pane);
+      });
+
+      document.getElementById('samples-section').style.display = 'block';
+    } catch (e) {
+      // Silently fail — samples are optional
+    }
+  }
+
+  async function selectSample(cardEl) {
+    clearError();
+    document.querySelectorAll('.sample-card').forEach(c => c.classList.remove('selected'));
+    cardEl.classList.add('selected');
+
+    try {
+      const res = await fetch(`${API_BASE}${cardEl.dataset.url}`);
+      if (!res.ok) throw new Error('Failed to load sample');
+      const blob = await res.blob();
+      const file = new File([blob], cardEl.dataset.filename, { type: blob.type });
+      setFile(file);
+    } catch (e) {
+      showError('Could not load sample: ' + e.message);
+    }
+  }
+
+  // Init
+  showSection('upload');
+  loadSamples();
+</script>
+</body>
+</html>

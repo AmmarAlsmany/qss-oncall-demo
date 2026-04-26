@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+python-multipart
+groq
+pyannote.audio==3.3.2
+torch
+torchaudio
+transformers
+librosa
+soundfile
+numpy
+python-dotenv
+pydub
+matplotlib

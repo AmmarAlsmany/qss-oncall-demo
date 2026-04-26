@@ -1,0 +1,49 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# ── Virtual environments (HUGE — never commit) ──
+venv/
+.venv/
+env/
+ENV/
+
+# ── Environment & secrets ──
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ── Backend temp / generated ──
+backend/_test*.wav
+backend/_tmp_*/
+backend/test_audio/_chunks_*/
+backend/test_audio/_tmp_*/
+
+# ── IDE / editor ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Claude Code ──
+.claude/
+memory/
+
+# ── Logs ──
+*.log
+logs/
