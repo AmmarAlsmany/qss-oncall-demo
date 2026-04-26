@@ -47,7 +47,13 @@ from analyzer import analyze_conversation
 
 load_dotenv()
 
-app = FastAPI(title="QSS OnCall Analyzer", version="2.0.0")
+# ROOT_PATH lets the app live behind a reverse-proxy prefix (e.g. nginx routing
+# qssdemo.shortyhub.com/api -> uvicorn on :8000). Leave empty for local dev.
+app = FastAPI(
+    title="QSS OnCall Analyzer",
+    version="2.0.0",
+    root_path=os.getenv("ROOT_PATH", ""),
+)
 
 app.add_middleware(
     CORSMiddleware,

@@ -937,7 +937,16 @@
 </div>
 
 <script>
-  const API_BASE = 'http://localhost:8000';
+  // API base — automatic per environment.
+  // - Local dev (file:// or localhost): point at the dev server.
+  // - Production (qssdemo.shortyhub.com): use the relative /api path proxied by nginx.
+  const API_BASE = (() => {
+    const host = window.location.hostname;
+    if (!host || host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:8000';
+    }
+    return '/api';
+  })();
 
   // ── File handling ──
   let selectedFile = null;
