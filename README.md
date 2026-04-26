@@ -22,29 +22,36 @@ backend/                   FastAPI service
 
 ```bash
 # 1. Install Python 3.10+ and ffmpeg
-# 2. Create a virtualenv and install deps
+# 2. Create a virtualenv
 python -m venv venv
 venv/Scripts/activate            # Windows
 # source venv/bin/activate       # Linux / macOS
 
-pip install -r backend/requirements.txt
-pip install httpx pyttsx3 gTTS pydub audioop-lts edge-tts   # extras for TTS sample generator
+# 3. Install PyTorch (CPU-only — skip if you want GPU)
+pip install torch==2.6.0 torchaudio==2.6.0 \
+    --index-url https://download.pytorch.org/whl/cpu
 
-# 3. Set environment variables in backend/.env
+# 4. Install runtime dependencies
+pip install -r backend/requirements.txt
+
+# (optional) extra deps for regenerating sample audio
+# pip install -r backend/requirements-dev.txt
+
+# 5. Set environment variables in backend/.env
 cp backend/.env.example backend/.env
 # Edit .env and fill in:
 #   GROQ_API_KEY  — get one at https://console.groq.com
 #   HF_TOKEN      — get one at https://huggingface.co/settings/tokens
 #   API_KEY       — optional shared secret for Laravel / external integrations
 
-# 4. (Optional) Generate sample audio for the frontend picker
+# 6. (Optional) Regenerate sample audio for the frontend picker
 cd backend
 python generate_test_audio.py
 
-# 5. Run the API
+# 7. Run the API
 uvicorn main:app --host 0.0.0.0 --port 8000
 
-# 6. Open frontend/index.html in a browser
+# 8. Open frontend/index.html in a browser
 ```
 
 ## Integration

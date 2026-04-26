@@ -1,0 +1,9 @@
+# Dev-only dependencies — needed to regenerate sample audio with
+# generate_test_audio.py. Production deploys do NOT need these.
+
+-r requirements.txt
+
+pyttsx3==2.99            # Offline English TTS via Windows SAPI
+edge-tts==7.2.8          # Online Arabic TTS via Microsoft Edge
+pydub==0.25.1            # Audio concat / format conversion
+audioop-lts==0.2.2       # pydub on Python 3.13+ (audioop was removed from stdlib)

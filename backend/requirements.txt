@@ -1,14 +1,28 @@
-fastapi
-uvicorn[standard]
-python-multipart
-groq
+# Runtime dependencies for the FastAPI backend.
+# For CPU-only servers, install torch first with:
+#   pip install torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+# Then run: pip install -r requirements.txt
+
+# ── Web framework ──
+fastapi==0.136.0
+uvicorn[standard]==0.44.0
+python-multipart==0.0.26
+httpx==0.28.1
+
+# ── External APIs ──
+groq==1.2.0
+
+# ── ML pipeline ──
 pyannote.audio==3.3.2
-torch
-torchaudio
-transformers
-librosa
-soundfile
-numpy
-python-dotenv
-pydub
-matplotlib
+torch==2.6.0
+torchaudio==2.6.0
+transformers==4.57.6
+
+# ── Audio I/O ──
+librosa==0.11.0
+soundfile==0.13.1
+numpy==2.4.3
+
+# ── Misc ──
+python-dotenv==1.2.2
+certifi==2026.2.25
