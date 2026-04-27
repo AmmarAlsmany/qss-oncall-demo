@@ -221,7 +221,7 @@
 
   .file-selected {
     display: none;
-    align-items: center;
+    flex-direction: column;
     gap: 12px;
     background: rgba(14,165,233,.08);
     border: 1px solid rgba(14,165,233,.25);
@@ -232,6 +232,21 @@
   }
 
   .file-selected.visible { display: flex; }
+
+  .file-info-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .audio-preview {
+    width: 100%;
+    height: 36px;
+    border-radius: 8px;
+    outline: none;
+    /* Re-skin native player to fit dark theme */
+    filter: invert(0.9) hue-rotate(180deg) saturate(0.7);
+  }
 
   .file-icon {
     font-size: 22px;
@@ -818,10 +833,13 @@
     </div>
 
     <div class="file-selected" id="file-info">
-      <span class="file-icon">🎵</span>
-      <span class="file-name" id="file-name-label">—</span>
-      <span class="file-size" id="file-size-label"></span>
-      <button class="remove-file" id="remove-file">✕</button>
+      <div class="file-info-row">
+        <span class="file-icon">🎵</span>
+        <span class="file-name" id="file-name-label">—</span>
+        <span class="file-size" id="file-size-label"></span>
+        <button class="remove-file" id="remove-file">✕</button>
+      </div>
+      <audio id="audio-preview" class="audio-preview" controls preload="metadata"></audio>
     </div>
 
     <div class="error-box" id="error-box"></div>
@@ -958,6 +976,7 @@
   const fileSizeLbl  = document.getElementById('file-size-label');
   const removeBtn    = document.getElementById('remove-file');
   const analyzeBtn   = document.getElementById('analyze-btn');
+  const audioPreview = document.getElementById('audio-preview');
 
   function formatBytes(b) {
     if (b < 1024)       return b + ' B';
@@ -970,6 +989,11 @@
     fileNameLbl.textContent = file.name;
     fileSizeLbl.textContent = formatBytes(file.size);
     fileInfo.classList.add('visible');
+
+    // Wire the audio player to the selected file
+    if (audioPreview.src) URL.revokeObjectURL(audioPreview.src);
+    audioPreview.src = URL.createObjectURL(file);
+
     checkReady();
   }
 
@@ -977,6 +1001,13 @@
     selectedFile = null;
     fileInput.value = '';
     fileInfo.classList.remove('visible');
+
+    if (audioPreview.src) {
+      URL.revokeObjectURL(audioPreview.src);
+      audioPreview.removeAttribute('src');
+      audioPreview.load();
+    }
+
     checkReady();
   }
 
