@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>QSS — OnCall Analyzer</title>
+<title>QSS - OnCall Analyzer</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
   :root {
@@ -293,6 +293,23 @@
     margin-bottom: 14px;
     text-align: center;
   }
+
+  .samples-loading {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 16px;
+  }
+
+  .samples-error { color: var(--orange); }
+
+  .samples-error a {
+    color: var(--accent2);
+    text-decoration: none;
+    margin-left: 6px;
+  }
+
+  .samples-error a:hover { text-decoration: underline; }
 
   .lang-label {
     font-size: 10px;
@@ -835,7 +852,7 @@
     <div class="file-selected" id="file-info">
       <div class="file-info-row">
         <span class="file-icon">🎵</span>
-        <span class="file-name" id="file-name-label">—</span>
+        <span class="file-name" id="file-name-label">-</span>
         <span class="file-size" id="file-size-label"></span>
         <button class="remove-file" id="remove-file">✕</button>
       </div>
@@ -849,7 +866,7 @@
     </button>
 
     <div class="samples-section" id="samples-section" style="display:none">
-      <div class="samples-divider">— Or try a sample call —</div>
+      <div class="samples-divider">- Or try a sample call -</div>
       <div id="samples-container"></div>
     </div>
   </div>
@@ -901,7 +918,7 @@
           <circle class="track" cx="50" cy="50" r="45" />
           <circle class="fill" id="score-arc" cx="50" cy="50" r="45" />
         </svg>
-        <div class="score-number" id="score-number">—</div>
+        <div class="score-number" id="score-number">-</div>
       </div>
       <div class="score-info">
         <h2 id="score-title">Service Analysis</h2>
@@ -914,14 +931,14 @@
     <div class="speakers-row">
       <div class="speaker-card">
         <div class="speaker-role">Employee</div>
-        <div class="speaker-id" id="employee-id">—</div>
-        <div class="tone-pill" id="employee-tone">—</div>
+        <div class="speaker-id" id="employee-id">-</div>
+        <div class="tone-pill" id="employee-tone">-</div>
         <div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5" id="employee-reason"></div>
       </div>
       <div class="speaker-card">
         <div class="speaker-role">Customer</div>
-        <div class="speaker-id" id="customer-id">—</div>
-        <div class="tone-pill" id="customer-tone">—</div>
+        <div class="speaker-id" id="customer-id">-</div>
+        <div class="tone-pill" id="customer-tone">-</div>
       </div>
     </div>
 
@@ -955,7 +972,7 @@
 </div>
 
 <script>
-  // API base — automatic per environment.
+  // API base - automatic per environment.
   // - Local dev (file:// or localhost): point at the dev server.
   // - Production (qssdemo.shortyhub.com): use the relative /api path proxied by nginx.
   const API_BASE = (() => {
@@ -1119,12 +1136,12 @@
       `<span class="verdict-badge verdict-${verdictKey}">${verdictIcons[verdictKey]||''} ${data.verdict || ''}</span>`;
 
     // Speakers
-    document.getElementById('employee-id').textContent = employee.speaker_id || '—';
-    document.getElementById('customer-id').textContent = customer.speaker_id || '—';
+    document.getElementById('employee-id').textContent = employee.speaker_id || '-';
+    document.getElementById('customer-id').textContent = customer.speaker_id || '-';
     document.getElementById('employee-reason').textContent = employee.identification_reason || '';
 
-    document.getElementById('employee-tone').textContent = '🎭 ' + (employee.tone || '—');
-    document.getElementById('customer-tone').textContent = '🎭 ' + (customer.tone || '—');
+    document.getElementById('employee-tone').textContent = '🎭 ' + (employee.tone || '-');
+    document.getElementById('customer-tone').textContent = '🎭 ' + (customer.tone || '-');
 
     // Strengths
     const sl = document.getElementById('strengths-list');
@@ -1195,69 +1212,98 @@
   // ── Sample picker ──
   const LANG_LABELS = { english: 'English', arabic: 'العربية' };
 
-  async function loadSamples() {
-    try {
-      const res = await fetch(`${API_BASE}/samples-index`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const langs = data.languages || {};
-      const langKeys = Object.keys(langs);
-      if (langKeys.length === 0) return;
-
-      const container = document.getElementById('samples-container');
-      container.innerHTML = '';
-
-      // Tab bar
-      const tabBar = document.createElement('div');
-      tabBar.className = 'lang-tabs';
-      container.appendChild(tabBar);
-
-      langKeys.forEach((lang, i) => {
-        const tab = document.createElement('button');
-        tab.type = 'button';
-        tab.className = 'lang-tab' + (i === 0 ? ' active' : '');
-        tab.dataset.lang = lang;
-        tab.textContent = LANG_LABELS[lang] || lang;
-        tab.addEventListener('click', () => {
-          document.querySelectorAll('.lang-tab').forEach(t => t.classList.toggle('active', t === tab));
-          document.querySelectorAll('.lang-pane').forEach(p => p.classList.toggle('active', p.dataset.lang === lang));
-        });
-        tabBar.appendChild(tab);
-      });
-
-      // Panes — one grid per language
-      langKeys.forEach((lang, i) => {
-        const pane = document.createElement('div');
-        pane.className = 'lang-pane' + (i === 0 ? ' active' : '');
-        pane.dataset.lang = lang;
-
-        const grid = document.createElement('div');
-        grid.className = 'sample-grid';
-
-        for (const f of langs[lang]) {
-          const card = document.createElement('button');
-          card.type = 'button';
-          card.className = 'sample-card';
-          card.dataset.url = f.url;
-          card.dataset.filename = f.filename;
-          card.innerHTML = `
-            <div class="sample-label">
-              <span>${f.label}</span>
-              ${f.expected_verdict ? `<span class="verdict-pill ${f.expected_verdict.replace(/\s+/g,'-')}">${f.expected_verdict}</span>` : ''}
-            </div>
-            ${f.description ? `<div class="sample-desc">${f.description}</div>` : ''}
-          `;
-          card.addEventListener('click', () => selectSample(card));
-          grid.appendChild(card);
-        }
-        pane.appendChild(grid);
-        container.appendChild(pane);
-      });
-
-      document.getElementById('samples-section').style.display = 'block';
-    } catch (e) {
-      // Silently fail — samples are optional
+  async function fetchSamplesWithRetry(maxAttempts = 4) {
+    let lastErr;
+    for (let i = 0; i < maxAttempts; i++) {
+      try {
+        const res = await fetch(`${API_BASE}/samples-index`, { cache: 'no-store' });
+        if (res.ok) return await res.json();
+        lastErr = new Error(`HTTP ${res.status}`);
+      } catch (e) {
+        lastErr = e;
+      }
+      // Exponential backoff: 600ms, 1.2s, 2.4s
+      await new Promise(r => setTimeout(r, 600 * Math.pow(2, i)));
     }
+    throw lastErr || new Error('samples-index unavailable');
+  }
+
+  async function loadSamples() {
+    const section   = document.getElementById('samples-section');
+    const container = document.getElementById('samples-container');
+
+    section.style.display = 'block';
+    container.innerHTML = '<div class="samples-loading">Loading sample calls…</div>';
+
+    let data;
+    try {
+      data = await fetchSamplesWithRetry();
+    } catch (e) {
+      container.innerHTML = `<div class="samples-loading samples-error">
+        Could not load sample calls. <a href="#" id="samples-retry">Retry</a>
+      </div>`;
+      document.getElementById('samples-retry').addEventListener('click', ev => {
+        ev.preventDefault();
+        loadSamples();
+      });
+      return;
+    }
+
+    const langs = data.languages || {};
+    const langKeys = Object.keys(langs);
+    if (langKeys.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+
+    container.innerHTML = '';
+
+    // Tab bar
+    const tabBar = document.createElement('div');
+    tabBar.className = 'lang-tabs';
+    container.appendChild(tabBar);
+
+    langKeys.forEach((lang, i) => {
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'lang-tab' + (i === 0 ? ' active' : '');
+      tab.dataset.lang = lang;
+      tab.textContent = LANG_LABELS[lang] || lang;
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.lang-tab').forEach(t => t.classList.toggle('active', t === tab));
+        document.querySelectorAll('.lang-pane').forEach(p => p.classList.toggle('active', p.dataset.lang === lang));
+      });
+      tabBar.appendChild(tab);
+    });
+
+    // Panes — one grid per language
+    langKeys.forEach((lang, i) => {
+      const pane = document.createElement('div');
+      pane.className = 'lang-pane' + (i === 0 ? ' active' : '');
+      pane.dataset.lang = lang;
+
+      const grid = document.createElement('div');
+      grid.className = 'sample-grid';
+
+      for (const f of langs[lang]) {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'sample-card';
+        card.dataset.url = f.url;
+        card.dataset.filename = f.filename;
+        card.innerHTML = `
+          <div class="sample-label">
+            <span>${f.label}</span>
+            ${f.expected_verdict ? `<span class="verdict-pill ${f.expected_verdict.replace(/\s+/g,'-')}">${f.expected_verdict}</span>` : ''}
+          </div>
+          ${f.description ? `<div class="sample-desc">${f.description}</div>` : ''}
+        `;
+        card.addEventListener('click', () => selectSample(card));
+        grid.appendChild(card);
+      }
+      pane.appendChild(grid);
+      container.appendChild(pane);
+    });
   }
 
   async function selectSample(cardEl) {
